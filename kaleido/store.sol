@@ -4,18 +4,15 @@ pragma solidity ^0.8.0;
 
 
 contract store{
-    uint256 public storedData;
 
-    function simplestorage(uint initVal) public {
-        storedData = initVal;
+    mapping (address => bytes32) public dataStore;
+
+    function set(address walletAddress, bytes32 dataHash ) public{
+        dataStore[walletAddress] = dataHash;
     }
 
-    function set(uint x) public{
-        storedData = x;
-    }
-
-    function query() public view returns (uint retVal){
-        return storedData;
+    function query(address walletAddress) public view returns (bytes32){
+        return dataStore[walletAddress];
     }
 
 }
