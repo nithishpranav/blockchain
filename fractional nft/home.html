@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<div >
+<center>
+<h1>Machine Registration</h1>
+<p>Manifacturer Name</p>
+<input type="text" name="manifacturer" id="manifacturer">
+<p>Model</p>
+<input type="text" name="model" id="model">
+<p>Serial Number</p>
+<input type="text" name="serial" id="serial">
+<p>Financier Wallet Address</p>
+<input type="text" name="financierWID" id="financierWID">
+<p>Machine Value</p>
+<input type="text" name="machineValue" id="machineValue">
+<br>
+<br>
+<button type="submit" onclick="register()">Register Machine</button>
+</center>
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/md5.js"></script>
+<script>
+    function register() {
+        var manifacturer = document.getElementById("manifacturer").value;
+        var model = document.getElementById("model").value;
+        var serial = document.getElementById("serial").value;
+        var financierWID = document.getElementById("financierWID").value;
+        var machineValue = document.getElementById("machineValue").value;
+            
+    }
+</script>
+
+
+</html>
