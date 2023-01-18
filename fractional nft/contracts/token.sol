@@ -8,7 +8,7 @@ import "@openzeppelin/contracts@4.8.1/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts@4.8.1/access/Ownable.sol";
 import "@openzeppelin/contracts@4.8.1/token/ERC20/extensions/draft-ERC20Permit.sol";
 
-contract Token is ERC20, Ownable, ERC20Permit, ERC721Holder {
+contract MyToken is ERC20, Ownable, ERC20Permit, ERC721Holder {
     //address of the NFT to be fractionalized
     IERC721 public collection;
 
