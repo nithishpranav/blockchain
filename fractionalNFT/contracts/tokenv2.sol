@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721Burnable.sol";
@@ -9,7 +11,7 @@ contract MyToken is ERC20, Ownable, ERC20Permit, ERC721Holder {
 
     //toked id of the NFT
     uint256 public tokenId;
-a
+
     //initialzation flag 
     bool public initialized = false;
 
