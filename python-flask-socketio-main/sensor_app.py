@@ -20,13 +20,11 @@ Get current date time
 """
 def get_current_datetime():
     now = datetime.now()
-    return now.strftime("%m/%d/%Y %H:%M:%S")
+    return now.strftime("%H:%M:%S")
 
-"""
-Generate random sequence of dummy sensor values and send it to our clients
-"""
+
 def background_thread():
-    print("Generating random sensor values")
+    print("Generating random sensor values") 
     while True:
         with open('PdM_telemetry.csv', 'r') as f:
             reader = csv.reader(f)

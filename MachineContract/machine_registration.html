@@ -1,0 +1,38 @@
+<html>
+<head>
+<title>Machine Registration</title>
+    <link href="{{url_for('static', filename = 'css/app.css')}}" rel="stylesheet">
+</head>
+
+<body>
+<center>
+<h2>Register Machine</h2>
+<form>
+<table>
+<tr>
+<th>Machine Name</th>
+<td><input type="text" name="machine_name" placeholder="Enter Machine Name"></td>
+</tr>
+<tr>
+<th>Machine ID</th>
+<td><input type="text" name="machine_id" placeholder="Enter Machine ID"></td>
+</tr>
+<tr>
+<th>Machine Value</th>
+<td><input type="text" name="machine_value" placeholder="Enter Machine Value"></td>
+</tr>
+<tr>
+<th>Financier Wallet ID</th>
+<td><input type="text" name="financier_wallet_id" placeholder="Enter Financier Wallet ID"></td>
+</tr>
+<tr>
+<th>Manufacturer Wallet ID</th>
+<td><input type="text" name="manufacturer_wallet_id" placeholder="Enter Manufacturer Wallet ID"></td>
+</tr>
+</table>
+
+<button type="submit">Register</button>
+</form>
+</center>
+</body>
+</html>
