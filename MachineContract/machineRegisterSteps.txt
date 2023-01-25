@@ -11,6 +11,8 @@ finainier WID: 0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774
 manifacturer WID: 0x5c70e9865822bc0add6ef06464da0d977f724577
 
 
+
+
 Step 1:
 Mint NFT
 NFT: POST/safeMint
