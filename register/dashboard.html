@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<head>
+    <title>dashboard</title>
+</head>
+
+<H1>dashboard</H1>
+
+<p id ="walletid"></p>
+
+<p>Add Document</p>
+<input type="text" id="documenthash" placeholder="document hash">
+<button onclick="addDocument()">add document</button>
+
+
+<p>Get Document</p>
+<button onclick="getDocument()">get document</button>
+<p>document hash: <span id="getdocumenthash"></span></p>
+
+<script>
+
+    //onload function
+    window.onload = function() {
+        console.log("onload");
+        var walletid = localStorage.getItem("walletid");
+        document.getElementById("walletid").innerHTML = walletid;
+        console.log(walletid);
+    }
+
+
+
+    function addDocument(){
+        console.log("addDocument");
+        var documenthash = document.getElementById("documenthash").value;
+        console.log(documenthash);
+
+        var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/storev2/set?kld-from="+walletid;
+
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+            "walletAddress": walletid,
+            "dataHash": documenthash
+        });
+        
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+        };
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => console.log(result))
+        .catch(error => console.log('error', error));
+    }
+
+
+    function getDocument(){
+        console.log("getDocument");
+        var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/storev2/query?kld-from="+walletid;
+
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+            "walletAddress": walletid
+        });
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+
+        };
+        fetch(url, requestOptions)
+        .then (response => response.json())
+        .then (data => {
+        console.log(data);
+        document.getElementById("getdocumenthash").innerHTML = data.output;
+    })
+    }
+
+</script>
+
+
+
+
+
+</html>

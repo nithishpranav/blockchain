@@ -7,32 +7,130 @@
 <body>
 <center>
 <h2>Register Machine</h2>
-<form>
 <table>
 <tr>
 <th>Machine Name</th>
-<td><input type="text" name="machine_name" placeholder="Enter Machine Name"></td>
+<td><input type="text" id="machine_name" placeholder="Enter Machine Name"></td>
 </tr>
 <tr>
 <th>Machine ID</th>
-<td><input type="text" name="machine_id" placeholder="Enter Machine ID"></td>
+<td><input type="text" id="machine_id" placeholder="Enter Machine ID"></td>
 </tr>
 <tr>
 <th>Machine Value</th>
-<td><input type="text" name="machine_value" placeholder="Enter Machine Value"></td>
+<td><input type="text" id="machine_value" placeholder="Enter Machine Value"></td>
 </tr>
 <tr>
 <th>Financier Wallet ID</th>
-<td><input type="text" name="financier_wallet_id" placeholder="Enter Financier Wallet ID"></td>
+<td><input type="text" id="financier_wallet_id" placeholder="Enter Financier Wallet ID"></td>
 </tr>
 <tr>
 <th>Manufacturer Wallet ID</th>
-<td><input type="text" name="manufacturer_wallet_id" placeholder="Enter Manufacturer Wallet ID"></td>
+<td><input type="text" id="manufacturer_wallet_id" placeholder="Enter Manufacturer Wallet ID"></td>
 </tr>
 </table>
 
-<button type="submit">Register</button>
-</form>
+<button type="submit" id ="register_button">Register</button>
 </center>
 </body>
+
+<script>
+
+    //
+    var machineValue = document.getElementById("machine_value").value;
+    var machineName = document.getElementById("machine_name").value;
+    var machineId = document.getElementById("machine_id").value;
+    var financierWalletId = document.getElementById("financier_wallet_id").value;
+    var manufacturerWalletId = document.getElementById("manufacturer_wallet_id").value;
+    var kld_from = "kld-from="+financierWalletId;
+    var kld_sync = "kld-sync=true";
+    var kld_register = "kld-register="+machineId;
+    var header = new Headers();
+    header.append("Authorization","Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+    header.append("Content-Type","application/json");
+
+    // first get an instance of a ERC-20 token contract
+    function createContractInstance() {
+        var raw = JSON.stringify({
+            "decimal":"0",
+            "initial_supply":machineValue,
+            "name":machineName,
+            "symbol":"TOKEN"
+        })
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+
+        var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/gateways/kaleidoerc20mb/?"+kld_from+"&"+kld_sync+"&"+kld_register;
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => {
+            console.log(result);
+            allowance();
+
+        })
+        .catch(error => console.log('error', error));
+    }
+
+
+    //instance of contract is created now
+
+    // setup the instance with the contract address
+    //allowance
+    function allowance(){
+        var url="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/allowance";
+        var raw = JSON.stringify({
+            "owner":financierWalletId,
+            "spender":financierWalletId
+        });
+
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => {
+            console.log(result);
+            approve();
+        })
+        .catch(error => console.log('error', error));
+    }
+
+    //approve
+    function approve(){
+        var url="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/approve";
+        var raw = JSON.stringify({
+            "spender":financierWalletId,
+            "value":machineValue
+        });
+
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => {
+            console.log(result);
+            //window change 
+        })
+        .catch(error => console.log('error', error));
+    }
+
+
+    // now we must register the machine details with the manufacturer and financier
+    
+
+</script>
+
 </html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+
+<head>
+    <title>register signup</title>
+</head>
+<p>register</p>
+<input type="text" id="gstid" placeholder="gst id">
+<input type="text" id="password" placeholder="password">
+<button onclick="validateGST()">register</button>
+
+<br>
+<br>
+
+<p>sign in</p>
+<input type = "text" id="sgstid" placeholder="gst id">
+<input type = "text" id="spassword" placeholder="password">
+<button onclick="signin()">sign in</button>
+
+
+
+<script>    
+//function to sent api request when registerer is clicked
+
+function validateGST(){
+    
+
+    console.log("validating gstid");
+    var gstid = document.getElementById("gstid").value;
+    var url = "https://commonapi.mastersindia.co/commonapis/searchgstin?gstin="+gstid;
+    var myHeaders = new Headers();
+    myHeaders.append("client_id", "JarZChUcsytSBbnkpt");
+    myHeaders.append("Authorization", "Bearer 0ab31ef7392227173c6e8d34195e86d5eb0da1e9");
+    //Access-Control-Allow-Origin' header is present on the requested resource
+    myHeaders.append("Access-Control-Allow-Origin", "*");
+
+
+
+    var requestOptions = {
+    method: 'GET',
+    headers: myHeaders,
+    redirect: 'follow'
+    };
+
+    fetch(url, requestOptions)
+    .then(response => response.text())
+    .then(result => {
+        localStorage.setItem("gstdata", result);
+        console.log(result);
+        register();
+    })
+
+    .catch(error => console.log('Invalid GSTIN', error));
+        
+
+}
+
+
+function register(){
+    console.log("register");
+    var gstid = document.getElementById("gstid").value;
+    var password = document.getElementById("password").value;
+
+    console.log(gstid);
+
+    var headers = new Headers({
+    'Authorization': `Basic ${btoa("u0oyw0ndlf" + ':' + "lK4ZP3vgyRjQMqz5cfipMTCIKU2xTzM6hQ2TF3c4IWk")}`
+    });
+
+    var walletid;
+    var url = "https://u0anrngbym-u0h5feggss-ethwallet.us0-aws.kaleido.io/api/v1/accounts";
+
+    fetch(url,{
+        headers: headers,
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        walletid = data.result.address;
+        
+        // now we have the wallet id, we can map the user credential hash to the wallet via smart contract
+        mapUser(gstid, password, walletid);
+
+
+    })
+    .catch(err => console.log(err));
+
+}
+
+function mapUser( gstid, password, walletid){
+    console.log("mapUser");
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+    "_gstId": gstid,
+    "_password": password,
+    "_wallet": walletid
+    });
+
+    var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow'
+    };
+
+    fetch("https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/r/registerWallet?kld-from=0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774", requestOptions)
+    .then(response => response.text())
+    .then(result => {
+        console.log("Registration Successful");
+        console.log(walletid);
+        localStorage.setItem("walletid", walletid);
+        window.location = "dashboard.html";
+    })
+    .catch(error => console.log('error', error));
+ }
+
+function signin(){
+    console.log("signin");
+    var gstid = document.getElementById("sgstid").value;
+    var password = document.getElementById("spassword").value;
+
+    console.log(gstid);
+
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+    myHeaders.append("Content-Type", "application/json");
+
+
+    var raw = JSON.stringify({
+    "_gstId": gstid,
+    "_password": password
+    });
+
+    var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow'
+    };
+
+    fetch("https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/r/getUser?kld-from=0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774", requestOptions)
+    .then (response => response.json())
+    .then (data => {
+        console.log(data);
+        var walletid = data.output;
+        console.log(walletid);
+        localStorage.setItem("walletid", walletid);
+        window.location = "dashboard.html";
+    })
+
+
+}
+
+
+
+
+</script>
+</html>

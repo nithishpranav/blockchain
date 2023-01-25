@@ -1,0 +1,43 @@
+steps
+
+Deploy instances of Token and NFT
+
+Token Contract Address: 0xbf28f9f3498096c33fd111dfbd57db7304b285e9
+
+NFT Contract Address: 0xed27ea3540973913fcbf2286dbb99f290ecc8821
+
+
+finainier WID: 0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774
+manifacturer WID: 0x5c70e9865822bc0add6ef06464da0d977f724577
+
+
+Step 1:
+Mint NFT
+NFT: POST/safeMint
+https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/machineid123/safeMint?kld-from=0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774&kld-sync=true
+
+{
+  "to": "0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774",
+  "tokenId": "123"
+}
+-----------------------------------
+Step 2:
+NFT: POST/setApprovalForAll
+https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/machineid123/setApprovalForAll?kld-from=0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774&kld-sync=true
+
+{
+  "approved": true,
+  "operator": "TCA"
+}
+-----------------------------------
+Step 3:
+TOKEN: POST/intialize
+https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/machineid1234/initialize?kld-from=0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774&kld-sync=true
+
+{
+  "_amount": "100000000000000",
+  "_collection": "0xed27ea3540973913fcbf2286dbb99f290ecc8821",
+  "_tokenId": "123"
+}
+-----------------------------------
+
