@@ -1,0 +1,314 @@
+<html>
+    <head>
+    <title>Machine Console</title>
+    <link href="{{url_for('static', filename = 'css/app.css')}}" rel="stylesheet">
+
+    </head>
+
+<body>
+    <div id = "input">
+        <p>Enter Machine ID</p>
+        <input type="text" id="machine_id" placeholder="Enter Machine ID" value="testMachine3">
+        <br>
+        <input type="text" id="owner" placeholder="Enter Owner Wallet Address" value="0xca0e0885acdf009f0f076d16dcb76ae206864823">
+        <button onclick=getMachineDetails() id="get_machine_details_button">Get Machine Details</button>
+    </div>
+    <div id ="main">
+        <div id = "console">
+            <center>
+                <h2>Machine Details</h2>
+                <table>
+                    <tr>
+                        <th>Machine ID</th>
+                        <td><input type="text" id="machineID"></td>
+                    </tr>
+                    <tr>
+                        <th>Machine Value</th>
+                        <td><input type="text" id="machineValue"></td>
+                    </tr>
+                    <tr>
+                        <th>Financier Wallet ID</th>
+                        <td><input type="text" id="financierWalletID"></td>
+                    </tr>
+                    <tr>
+                        <th>Manufacturer Wallet ID</th>
+                        <td><input type="text" id="manufacturerWalletID"></td>
+                    </tr>
+                </table>
+                
+            </center>
+        </div>
+        <div id = "ownership">
+            <center>
+            <h2>OwnerShip</h2>
+            <table>
+                <tr>
+                    <th>Manufacturer Share</th>
+                    <td><input type = "text "id="manufacturer_share"></td>
+                </tr>
+                <tr>
+                    <th>Financier Share</th>
+                    <td><input type = "text "id="financier_share"></td>
+            </table>
+        </center>
+        </div>
+    </div>  
+
+    <div>
+        <center>
+            <h2>Machine Status</h2>
+            <table id="tblcsvdata" border="1" style="border-collapse: collapse;">
+                <thead>
+                     <tr>
+                         <th>Hour</th>
+                         <th>Usage</th>
+                     </tr>
+                </thead>
+                <tbody>
+       
+                </tbody>
+       
+           </table>
+        </center>
+        <input type="file" onchange=read(this)>
+        <div class="output"></div>
+    </div>
+</body>
+
+
+<script>
+    const reader = new FileReader()
+
+    window.onload = function() {
+        document.getElementById("console").style.display = "none";
+        document.getElementById("ownership").style.display = "none";
+        //document.getElementById("usageChart").style.display = "none";
+    }
+
+
+    function getMachineDetails() {
+        var machine_id = document.getElementById("machine_id").value;
+        var owner = document.getElementById("owner").value;
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+        var kld_from = "kld-from="+owner;
+        var url ="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machine_id+"/contractDetails?"+kld_from;
+
+        
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            redirect: 'follow'
+        };
+
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => {
+            console.log(result);
+            document.getElementById("console").style.display = "block";
+            var machineDetails = JSON.parse(result);
+            document.getElementById("machineID").value = machineDetails.output;
+            document.getElementById("machineValue").value = machineDetails.output1;
+            document.getElementById("financierWalletID").value = machineDetails.output2;
+            document.getElementById("manufacturerWalletID").value = machineDetails.output3;
+
+            getShareDetails();
+        })
+        .catch(error => console.log('error', error));
+    }
+
+    function getShareDetails(){
+        var machine_id = document.getElementById("machine_id").value;
+        var machine_value = document.getElementById("machineValue").value;
+        var owner = document.getElementById("owner").value;
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+        var kld_from = "kld-from="+owner;
+        var account = "account="+owner;
+
+        var url ="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machine_id+"/balanceOf?"+account+"&"+kld_from;
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            redirect: 'follow'
+        };
+
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => {
+            console.log(result);
+            var shareDetails = JSON.parse(result);
+            var fShare = parseInt(shareDetails.output);
+            var mShare = parseInt(machine_value)-fShare;
+            console.log(shareDetails);
+            console.log(fShare);
+            console.log(mShare);
+            document.getElementById("manufacturer_share").value = fShare;
+            document.getElementById("financier_share").value = mShare;
+            document.getElementById("ownership").style.display = "block";
+            readMachineUsage()
+        })
+        .catch(error => console.log('error', error));
+    }
+
+
+    async function readMachineUsage() {
+        //get machine conract address
+        var contractAddress = getContractAddress();
+
+        labels  = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10','11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'];
+        usageData =  [12, 10, 3, 5, 2, 3, 1, 2, 3, 4, 5, 6, 7, 10, 9, 1, 4, 12, 6, 8, 7, 2, 4, 3, 9, 2, 4, 6, 5, 4, 10];
+
+        for(var i=0; i<labels.length; i++){
+            var row = tblcsvdata.insertRow();
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            cell1.innerHTML = labels[i];
+            cell2.innerHTML = usageData[i];
+            insertData(labels[i], usageData[i], contractAddress);
+            await new Promise(done => setTimeout(() => done(), 5000));
+        }
+
+    }
+
+    function getContractAddress(){
+        var machine_id = document.getElementById("machine_id").value;
+        var owner = document.getElementById("owner").value;
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+
+        var kld_from = "kld-from="+owner;
+        var kld_sync = "kld-sync=true";
+        var url ="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machine_id+"/contractDetails?"+kld_from+"&"+kld_sync;
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            redirect: 'follow'
+        };
+
+        fetch(url, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            console.log(result);
+            var machineDetails = result.output4;
+            return machineDetails;
+        })
+        .catch(error => console.log('error', error));
+    }
+
+    function insertData(hour, usage, contractAddress){
+        var machine_id = document.getElementById("machine_id").value;
+        var kld_from = "kld-from="+contractAddress;
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+
+        var raw = JSON.stringify({"hour":hour,"usage":usage});
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+        };
+        
+        var url ="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machine_id+"/insertData?"+kld_from;
+
+
+    }
+            
+        // function read(input) {
+        //     //const input = "./machineUsage.csv"
+        //     console.log(this);
+        //     console.log(input.files[0]); 
+        //     const csv = input.files[0]
+        //     reader.readAsText(csv)
+        // }
+
+        
+
+        // reader.onload = function (e) {
+        //     document.querySelector('.output').innerText = e.target.result;
+        // }
+    
+                // var file = new File([""],"C:\Users\Nithish\Desktop\College\SEM-4\blockchain\blockchain\MachineContract\machineUsage.csv");
+        // var reader = new FileReader();
+        // reader.readAsText(file[0]);
+        // reader.onload = function(event) {
+
+        //         // Read file data
+        //     var csvdata = event.target.result;
+
+        //     // Split by line break to gets rows Array
+        //     var rowData = csvdata.split('\n');
+        //     console.log(rowData);
+
+        //     // <table > <tbody>
+        //     var tbodyEl = document.getElementById('tblcsvdata').getElementsByTagName('tbody')[0];
+
+        //     // Loop through rows
+        //     for (var i = 0; i < rowData.length; i++) {
+        //         // Split by comma to get columns Array
+        //         var colData = rowData[i].split(',');
+
+        //         // Create <tr> element
+        //         var trEl = document.createElement('tr');
+
+        //         // Loop through columns
+        //         for (var j = 0; j < colData.length; j++) {
+        //             // Create <td> element
+        //             var tdEl = document.createElement('td');
+
+        //             // Set column text
+        //             tdEl.textContent = colData[j];
+
+        //             // Append <td> to <tr>
+        //             trEl.appendChild(tdEl);
+        //         }
+
+        //         // Append <tr> to <tbody>
+        //         tbodyEl.appendChild(trEl);
+        //     }
+        // }
+    
+    // var files = new File([""], "machineUsage.csv", {type: "text/csv", lastModified: new Date()});
+    // var file = files[0];
+    // //var file = new File("C:\Users\Nithish\Desktop\College\SEM-4\blockchain\blockchain\MachineContract\machineUsage.csv");
+    // var reader = new FileReader();
+    // reader.readAsText(file);
+    // reader.onload = function(event) {
+
+    //         // Read file data
+    //     var csvdata = event.target.result;
+
+    //     // Split by line break to gets rows Array
+    //     var rowData = csvdata.split('\n');
+
+    //     // <table > <tbody>
+    //     var tbodyEl = document.getElementById('tblcsvdata').getElementsByTagName('tbody')[0];
+    //     tbodyEl.innerHTML = "";
+
+    //     // Loop on the row Array (change row=0 if you also want to read 1st row)
+    //     for (var row = 1; row < rowData.length; row++) {
+
+    //           // Insert a row at the end of table
+    //           var newRow = tbodyEl.insertRow();
+
+    //           // Split by comma (,) to get column Array
+    //           rowColData = rowData[row].split(',');
+
+    //           // Loop on the row column Array
+    //           for (var col = 0; col < rowColData.length; col++) {
+
+    //                // Insert a cell at the end of the row
+    //                var newCell = newRow.insertCell();
+    //                newCell.innerHTML = rowColData[col];
+
+    //           }
+
+    //     }
+    // };
+
+</script>
+</html>

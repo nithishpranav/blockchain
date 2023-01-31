@@ -5,6 +5,7 @@
 </head>
 
 <body>
+<div>
 <center>
 <h2>Register Machine</h2>
 <table>
@@ -25,38 +26,115 @@
 <td><input type="text" id="financier_wallet_id" placeholder="Enter Financier Wallet ID"></td>
 </tr>
 <tr>
+<th>Financier Share</th>
+<td><input type="text" id="financier_share" placeholder="Enter Financier Share"></td>
+</tr>
+<tr>
 <th>Manufacturer Wallet ID</th>
 <td><input type="text" id="manufacturer_wallet_id" placeholder="Enter Manufacturer Wallet ID"></td>
 </tr>
+<tr>
+<th>Manufacturer Share</th>
+<td><input type="text" id="manufacturer_share" placeholder="Enter Manufacturer Share"></td>
+</tr>
 </table>
 
-<button type="submit" id ="register_button">Register</button>
+<button onclick=createERC20TokenContractInstance() id="register_button">Register</button>
 </center>
+</div>
+
+<div id = "console">
+<center>
+<h2>Machine Registered</h2>
+</center>
+</div>
+
 </body>
 
 <script>
 
+    window.onload = function() {
+        document.getElementById("console").style.display = "none";
+    }
     //
-    var machineValue = document.getElementById("machine_value").value;
-    var machineName = document.getElementById("machine_name").value;
-    var machineId = document.getElementById("machine_id").value;
-    var financierWalletId = document.getElementById("financier_wallet_id").value;
-    var manufacturerWalletId = document.getElementById("manufacturer_wallet_id").value;
-    var kld_from = "kld-from="+financierWalletId;
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
     var kld_sync = "kld-sync=true";
-    var kld_register = "kld-register="+machineId;
-    var header = new Headers();
-    header.append("Authorization","Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
-    header.append("Content-Type","application/json");
 
-    // first get an instance of a ERC-20 token contract
-    function createContractInstance() {
-        var raw = JSON.stringify({
-            "decimal":"0",
-            "initial_supply":machineValue,
-            "name":machineName,
-            "symbol":"TOKEN"
+    function createERC20TokenContractInstance(){
+        var financierWalletId = document.getElementById("financier_wallet_id").value;
+        var machineId = document.getElementById("machine_id").value;
+        var kld_register = "kld-register="+machineId;
+        var kld_from = "kld-from="+financierWalletId;
+        
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        redirect: 'follow'
+        };
+        var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/gateways/machineerc20token/?"+kld_from+"&"+kld_sync+"&"+kld_register;
+
+        fetch(url, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            console.log(result);
+            var contract_address = result.contractAddress;
+            initialzeContractInstance(contract_address);
         })
+        .catch(error => console.log('error', error));
+    }
+
+    function initialzeContractInstance(contract_address){
+        var contractAddress = contract_address;
+        var financierWalletId = document.getElementById("financier_wallet_id").value;
+        var manufacturerWalletId = document.getElementById("manufacturer_wallet_id").value;
+        var machineValue = document.getElementById("machine_value").value;
+        var machineId = document.getElementById("machine_id").value;
+        var financier_share = document.getElementById("financier_share").value;
+        var manufacturer_share = document.getElementById("manufacturer_share").value;
+        var kld_from = "kld-from="+financierWalletId;
+
+        var raw = JSON.stringify({
+            "_amount": machineValue,
+            "_contractAddress": contractAddress,
+            "_finacierShare": financier_share,
+            "_financierWID": financierWalletId,
+            "_machineID": machineId,
+            "_manufacturerShare": manufacturer_share,
+            "_manufacturerWID": manufacturerWalletId
+        });
+
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+        
+        var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/initialize?"+kld_from+"&"+kld_sync;
+
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result =>{
+            console.log(result);
+            increaseFinancierAllowance(); 
+        })
+
+    }
+
+    function increaseFinancierAllowance(){
+        var financierWalletId = document.getElementById("financier_wallet_id").value;
+        var machineId = document.getElementById("machine_id").value;
+        var machineValue = document.getElementById("machine_value").value;
+        var kld_from = "kld-from="+financierWalletId;
+        
+        var raw = JSON.stringify({
+            "spender": financierWalletId,
+            "addedValue": machineValue
+        });
+
+        var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/increaseAllowance?"+kld_from+"&"+kld_sync;
+
         var requestOptions = {
         method: 'POST',
         headers: myHeaders,
@@ -64,68 +142,123 @@
         redirect: 'follow'
         };
 
-        var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/gateways/kaleidoerc20mb/?"+kld_from+"&"+kld_sync+"&"+kld_register;
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then (result => {
+            console.log(result);
+            increaseManufacturerAllowance();
+        })
+        .catch(error => console.log('error', error));
+    }
+
+    //increase manufacturer allowance
+    function increaseManufacturerAllowance(){
+        var manufacturerWalletId = document.getElementById("manufacturer_wallet_id").value;
+        var machineId = document.getElementById("machine_id").value;
+        var machineValue = document.getElementById("machine_value").value;
+        var kld_from = "kld-from="+manufacturerWalletId;
+
+        var raw = JSON.stringify({
+            "spender": manufacturerWalletId,
+            "addedValue": machineValue
+        });
+
+        var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/increaseAllowance?"+kld_from+"&"+kld_sync;
+
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+
         fetch(url, requestOptions)
         .then(response => response.text())
         .then(result => {
             console.log(result);
-            allowance();
-
+            document.getElementById("console").style.display = "block";
         })
         .catch(error => console.log('error', error));
     }
+    
+
+
+    // first get an instance of a ERC-20 token contract
+
+
+    // function createContractInstance() {
+    //     var raw = JSON.stringify({
+    //         "decimal":"0",
+    //         "initial_supply":machineValue,
+    //         "name":machineName,
+    //         "symbol":"TOKEN"
+    //     })
+    //     var requestOptions = {
+    //     method: 'POST',
+    //     headers: myHeaders,
+    //     body: raw,
+    //     redirect: 'follow'
+    //     };
+    //     var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/gateways/kaleidoerc20mb/?"+kld_from+"&"+kld_sync+"&"+kld_register;
+    //     fetch(url, requestOptions)
+    //     .then(response => response.text())
+    //     .then(result => {
+    //         console.log(result);
+    //     })
+    //     .catch(error => console.log('error', error));
+    // }
 
 
     //instance of contract is created now
 
     // setup the instance with the contract address
     //allowance
-    function allowance(){
-        var url="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/allowance";
-        var raw = JSON.stringify({
-            "owner":financierWalletId,
-            "spender":financierWalletId
-        });
+    // function allowance(){
+    //     var url="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/allowance";
+    //     var raw = JSON.stringify({
+    //         "owner":financierWalletId,
+    //         "spender":financierWalletId
+    //     });
 
-        var requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        body: raw,
-        redirect: 'follow'
-        };
+    //     var requestOptions = {
+    //     method: 'POST',
+    //     headers: myHeaders,
+    //     body: raw,
+    //     redirect: 'follow'
+    //     };
 
-        fetch(url, requestOptions)
-        .then(response => response.text())
-        .then(result => {
-            console.log(result);
-            approve();
-        })
-        .catch(error => console.log('error', error));
-    }
+    //     fetch(url, requestOptions)
+    //     .then(response => response.text())
+    //     .then(result => {
+    //         console.log(result);
+    //         approve();
+    //     })
+    //     .catch(error => console.log('error', error));
+    // }
 
     //approve
-    function approve(){
-        var url="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/approve";
-        var raw = JSON.stringify({
-            "spender":financierWalletId,
-            "value":machineValue
-        });
+    // function approve(){
+    //     var url="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/approve";
+    //     var raw = JSON.stringify({
+    //         "spender":financierWalletId,
+    //         "value":machineValue
+    //     });
 
-        var requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        body: raw,
-        redirect: 'follow'
-        };
+    //     var requestOptions = {
+    //     method: 'POST',
+    //     headers: myHeaders,
+    //     body: raw,
+    //     redirect: 'follow'
+    //     };
 
-        fetch(url, requestOptions)
-        .then(response => response.text())
-        .then(result => {
-            console.log(result);
-            //window change 
-        })
-        .catch(error => console.log('error', error));
-    }
+    //     fetch(url, requestOptions)
+    //     .then(response => response.text())
+    //     .then(result => {
+    //         console.log(result);
+    //         //window change 
+    //     })
+    //     .catch(error => console.log('error', error));
+    // }
 
 
     // now we must register the machine details with the manufacturer and financier

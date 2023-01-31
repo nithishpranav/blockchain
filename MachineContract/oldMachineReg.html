@@ -1,0 +1,356 @@
+<html>
+<head>
+<title>Machine Registration</title>
+    <link href="{{url_for('static', filename = 'css/app.css')}}" rel="stylesheet">
+</head>
+
+<body>
+<div>
+<center>
+<h2>Register Machine</h2>
+<table>
+<tr>
+<th>Machine Name</th>
+<td><input type="text" id="machine_name" placeholder="Enter Machine Name"></td>
+</tr>
+<tr>
+<th>Machine ID</th>
+<td><input type="text" id="machine_id" placeholder="Enter Machine ID"></td>
+</tr>
+<tr>
+<th>Machine Value</th>
+<td><input type="text" id="machine_value" placeholder="Enter Machine Value"></td>
+</tr>
+<tr>
+<th>Financier Wallet ID</th>
+<td><input type="text" id="financier_wallet_id" placeholder="Enter Financier Wallet ID"></td>
+</tr>
+<tr>
+<th>Manufacturer Wallet ID</th>
+<td><input type="text" id="manufacturer_wallet_id" placeholder="Enter Manufacturer Wallet ID"></td>
+</tr>
+</table>
+
+<button onclick=initialzeVariables() id="register_button">Register</button>
+</center>
+</div>
+
+<div id = "console">
+<center>
+<h2>Console</h2>
+<p>Machine Registered</p>
+<p>Token Split</p>
+<table>
+<tr>
+<th>Financier</th>
+<td><input type="text" id="financierTokens" placeholder="Enter Token Amount"></td>
+</tr>
+<tr>
+<th>Manufacturer</th>
+<td><input type="text" id="manufacturerTokens" placeholder="Enter Token Amount"></td>
+</tr>
+</table>
+<button onclick="splitTokens()">Split Tokens</button>
+</center>
+</div>
+
+</body>
+
+<script>
+
+    window.onload = function() {
+        document.getElementById("console").style.display = "none";
+    }
+    //
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+    // myHeaders.append("Content-Type", "application/json");
+    // myHeaders.append("accept", "application/json");
+    var NFTContractSigner = "kld-from=0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774"
+    var NFTContractSignerAddress = "0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774"
+    var machineValue =0;
+    var machineName = 0;
+    var machineId = 0;
+    //var financierWalletId = 0;
+    var manufacturerWalletId = 0;
+    var kld_from_fwid = 0;
+    var kld_sync = 0;
+    //var kld_register = 0;
+    //var ERC20TokenContractAddress = "0x00000000000000000000000";
+    var NFTTokenContractAddress = "0x54cfbcd1008371b85c8f5c50dd3afb3982b40fc2"
+
+    function initialzeVariables(){
+        var machineValue = document.getElementById("machine_value").value;
+        var machineName = document.getElementById("machine_name").value;
+        var machineId = document.getElementById("machine_id").value;
+
+        //var kld_from_fwid = "kld-from="+financierWalletId;
+        var kld_sync = "kld-sync=true";
+        //var kld_register = "kld-register="+machineId;
+        var header = new Headers();
+        // console.log(financierWalletId);
+        // console.log(machineId);
+        mintNFTToken();
+    }
+    // first get an instance of a ERC-20 token contract
+
+    function mintNFTToken(){
+        var financierWalletId = document.getElementById("financier_wallet_id").value;
+        var manufacturerWalletId = document.getElementById("manufacturer_wallet_id").value;
+        var machineId = document.getElementById("machine_id").value;
+        console.log(financierWalletId);
+        console.log(machineId);
+        var raw = JSON.stringify({
+            "to":NFTContractSignerAddress,
+            "tokenId":machineId
+        });
+        console.log("raw "+raw);
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+        };
+        var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/nfttoken/safeMint?"+NFTContractSigner+"&"+kld_sync;
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then (result => {
+            console.log(result);
+            createERC20TokenContractInstance();
+        })
+        .catch(error => console.log('error', error));
+    }
+
+    //create  ERC-20 Token contract instance
+
+    async function createERC20TokenContractInstance(){
+        var machineId = document.getElementById("machine_id").value;
+        var kld_register = "kld-register="+machineId;
+        var financierwalletid = document.getElementById("financier_wallet_id").value;
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+        
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        redirect: 'follow'
+        };
+
+        fetch("https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/gateways/u0cqe4o9nl/?kld-from="+NFTContractSignerAddress+"&kld-sync=true&"+kld_register, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            console.log(result);
+            ERC20TokenContractAddress = result.contractAddress;
+            console.log("ERC20 Token Contract Address "+ERC20TokenContractAddress);
+            approveNFTWithTokenContractAddress(ERC20TokenContractAddress);
+        })
+        .catch(error => console.log('error', error));
+    }
+
+
+//Approve NFT with Token Contract Address
+
+    function approveNFTWithTokenContractAddress(e){
+
+        var ERC20TokenContractAddress = e;
+        console.log("ERC20 Token Contract Address "+ERC20TokenContractAddress);
+        var financierWalletId = document.getElementById("financier_wallet_id").value;
+        var url="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/nfttoken/setApprovalForAll?kld-from="+NFTContractSignerAddress+"&"+kld_sync;
+        var raw = JSON.stringify({
+            "operator":ERC20TokenContractAddress,
+            "approved":true
+        });
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+        };
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result =>{
+            console.log(result);
+            initializeNFT();
+        })
+        .catch(error => console.log('error', error));
+    }
+
+    //initialize NFT on ERC-20 Token Contract
+
+    function initializeNFT(){
+        var machineId = document.getElementById("machine_id").value;
+        var financierWalletId = document.getElementById("financier_wallet_id").value;
+        var manufacturerWalletId = document.getElementById("manufacturer_wallet_id").value;
+        var machineValue = document.getElementById("machine_value").value;
+        var url="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/initialize?kld-from="+NFTContractSignerAddress+"&"+kld_sync;
+
+        var raw = JSON.stringify({
+            "_amount":machineValue,
+            "_collection":NFTTokenContractAddress,
+            "_financierWID": financierWalletId,
+            "_manufacturerWID": manufacturerWalletId,
+            "_tokenId":machineId
+        })
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+        };
+
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result =>{
+            console.log(result);
+            //document.getElementById("console").style.display = "block";
+            approveFundFinancier();
+            })
+    }
+    
+    //approve contractSigner
+    function approveContractSigner(){
+
+    }
+
+    //approve spender and token for both the parties
+    function approveFundFinancier(){
+        var machineId = document.getElementById("machine_id").value;    
+        var financierWalletId = document.getElementById("financier_wallet_id").value;
+
+        var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/approve?kld-from="+NFTContractSignerAddress+"&"+kld_sync;
+        var raw = JSON.stringify({
+            "spender":financierWalletId,
+            "value":machineValue
+        });
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+        };
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => {
+            console.log(result);
+            approveFundManufacturer();
+        })
+    }
+
+    function approveFundManufacturer(){
+        var machineId = document.getElementById("machine_id").value;
+        var manufacturerWalletId = document.getElementById("manufacturer_wallet_id").value;
+        var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/approve?kld-from="+NFTContractSignerAddress+"&"+kld_sync;
+        var raw = JSON.stringify({
+            "spender":manufacturerWalletId,
+            "value":machineValue
+        });
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+        };
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => {
+            console.log(result);
+            document.getElementById("console").style.display = "block";
+        })
+    }
+
+
+    //split tokens
+    function splitTokens(){
+        var machineId = document.getElementById("machine_id").value;
+        var financierWalletId = document.getElementById("financier_wallet_id").value;
+        var manufacturerWalletId = document.getElementById("manufacturer_wallet_id").value;
+        var machineValue = document.getElementById("machine_value").value;
+
+    }
+    
+
+
+
+    // function createContractInstance() {
+    //     var raw = JSON.stringify({
+    //         "decimal":"0",
+    //         "initial_supply":machineValue,
+    //         "name":machineName,
+    //         "symbol":"TOKEN"
+    //     })
+    //     var requestOptions = {
+    //     method: 'POST',
+    //     headers: myHeaders,
+    //     body: raw,
+    //     redirect: 'follow'
+    //     };
+    //     var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/gateways/kaleidoerc20mb/?"+kld_from+"&"+kld_sync+"&"+kld_register;
+    //     fetch(url, requestOptions)
+    //     .then(response => response.text())
+    //     .then(result => {
+    //         console.log(result);
+    //     })
+    //     .catch(error => console.log('error', error));
+    // }
+
+
+    //instance of contract is created now
+
+    // setup the instance with the contract address
+    //allowance
+    // function allowance(){
+    //     var url="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/allowance";
+    //     var raw = JSON.stringify({
+    //         "owner":financierWalletId,
+    //         "spender":financierWalletId
+    //     });
+
+    //     var requestOptions = {
+    //     method: 'POST',
+    //     headers: myHeaders,
+    //     body: raw,
+    //     redirect: 'follow'
+    //     };
+
+    //     fetch(url, requestOptions)
+    //     .then(response => response.text())
+    //     .then(result => {
+    //         console.log(result);
+    //         approve();
+    //     })
+    //     .catch(error => console.log('error', error));
+    // }
+
+    //approve
+    // function approve(){
+    //     var url="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machineId+"/approve";
+    //     var raw = JSON.stringify({
+    //         "spender":financierWalletId,
+    //         "value":machineValue
+    //     });
+
+    //     var requestOptions = {
+    //     method: 'POST',
+    //     headers: myHeaders,
+    //     body: raw,
+    //     redirect: 'follow'
+    //     };
+
+    //     fetch(url, requestOptions)
+    //     .then(response => response.text())
+    //     .then(result => {
+    //         console.log(result);
+    //         //window change 
+    //     })
+    //     .catch(error => console.log('error', error));
+    // }
+
+
+    // now we must register the machine details with the manufacturer and financier
+    
+
+</script>
+
+</html>
