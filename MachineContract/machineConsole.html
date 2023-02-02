@@ -70,8 +70,7 @@
        
            </table>
         </center>
-        <input type="file" onchange=read(this)>
-        <div class="output"></div>
+
     </div>
 </body>
 
@@ -153,58 +152,77 @@
     }
 
 
+
+    // function getContractAddress(){
+    //     var machineDetails;
+    //     var machine_id = document.getElementById("machine_id").value;
+    //     var owner = document.getElementById("owner").value;
+    //     var myHeaders = new Headers();
+    //     myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+
+    //     var kld_from = "kld-from="+owner;
+    //     var kld_sync = "kld-sync=true";
+    //     var url ="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machine_id+"/contractDetails?"+kld_from+"&"+kld_sync;
+
+    //     var requestOptions = {
+    //         method: 'POST',
+    //         headers: myHeaders,
+    //         redirect: 'follow'
+    //     };
+
+    //     fetch(url, requestOptions)
+    //     .then(response => response.json())
+    //     .then(result => {
+    //         console.log(result);
+    //         machineDetails = result.output4;
+    //         console.log(machineDetails);
+    //     })
+    //     .catch(error => console.log('error', error));
+    //     return machineDetails;
+    // }
+
     async function readMachineUsage() {
         //get machine conract address
-        var contractAddress = getContractAddress();
+        // var contractAddress ="0x974dc96cb0799e8f2e004ccdb3ddc5d608a77c42";
+        // console.log("c"+contractAddress);
 
         labels  = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10','11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'];
         usageData =  [12, 10, 3, 5, 2, 3, 1, 2, 3, 4, 5, 6, 7, 10, 9, 1, 4, 12, 6, 8, 7, 2, 4, 3, 9, 2, 4, 6, 5, 4, 10];
-
+        
+        var machine_id = document.getElementById("machine_id").value;
+        const d = new Date();
+        let year = d.getFullYear();
+        let month = d.getMonth()+1;
+        let date = d.getDate();
+        let today = date+"/"+month+"/"+year;
         for(var i=0; i<labels.length; i++){
+            var timeStamp = machine_id+"-"+labels[i]+"-"+today;
             var row = tblcsvdata.insertRow();
             var cell1 = row.insertCell(0);
             var cell2 = row.insertCell(1);
             cell1.innerHTML = labels[i];
             cell2.innerHTML = usageData[i];
-            insertData(labels[i], usageData[i], contractAddress);
+            insertData(labels[i], usageData[i]);
             await new Promise(done => setTimeout(() => done(), 5000));
         }
 
+
     }
 
-    function getContractAddress(){
-        var machine_id = document.getElementById("machine_id").value;
-        var owner = document.getElementById("owner").value;
-        var myHeaders = new Headers();
-        myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
 
+    function insertData(timestamp, usage){
+       // console.log(contractAddress);
+        var owner = document.getElementById("owner").value;
+        var machine_id = document.getElementById("machine_id").value;
         var kld_from = "kld-from="+owner;
         var kld_sync = "kld-sync=true";
-        var url ="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machine_id+"/contractDetails?"+kld_from+"&"+kld_sync;
-
-        var requestOptions = {
-            method: 'POST',
-            headers: myHeaders,
-            redirect: 'follow'
-        };
-
-        fetch(url, requestOptions)
-        .then(response => response.json())
-        .then(result => {
-            console.log(result);
-            var machineDetails = result.output4;
-            return machineDetails;
-        })
-        .catch(error => console.log('error', error));
-    }
-
-    function insertData(hour, usage, contractAddress){
-        var machine_id = document.getElementById("machine_id").value;
-        var kld_from = "kld-from="+contractAddress;
         var myHeaders = new Headers();
         myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
 
-        var raw = JSON.stringify({"hour":hour,"usage":usage});
+        var raw = JSON.stringify({
+            "timeStamp":machine_id+":"+timestamp,
+            "usage":usage
+        });
 
         var requestOptions = {
             method: 'POST',
@@ -213,11 +231,59 @@
             redirect: 'follow'
         };
         
-        var url ="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machine_id+"/insertData?"+kld_from;
+        var url ="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/testmachine2usage/recordUsage?"+kld_from+"&"+kld_sync;
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => console.log(result))
+        .catch(error => console.log('error', error));
+    }
+         
+    
+    function computeDayUsage(){
+        var machine_id = document.getElementById("machine_id").value;
+        const d = new Date();
+        let year = d.getFullYear();
+        let month = d.getMonth()+1;
+        let date = d.getDate();
+        let today = date+"/"+month+"/"+year;
+        labels  = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10','11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24'];
+        var dayUsage = 0;
+        for(var i=0; i<labels.length; i++){
+            var timeStamp = machine_id+"-"+labels[i]+"-"+today;
+            var usage = getUsage(timeStamp);
+            dayUsage = dayUsage + usage;
 
+        }
+    }
+
+    function getUsage(timeStamp){
+        var machine_id = document.getElementById("machine_id").value;
+        var owner = document.getElementById("owner").value;
+        var kld_from = "kld-from="+owner;
+        var kld_sync = "kld-sync=true";
+        var timestamp = timeStamp;
+        var param = "timeStamp="+timestamp;
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+
+
+        var url ="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/testmachine2usage/returnUsage?"+param+"&"+kld_from+"&"+kld_sync;
+
+        var requestOptions = {
+            method: 'GET',
+            headers: myHeaders,
+            redirect: 'follow'
+        };
+
+        fetch(url, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            console.log(result);
+            return result.output;
+        })
+        .catch(error => console.log('error', error));
 
     }
-            
         // function read(input) {
         //     //const input = "./machineUsage.csv"
         //     console.log(this);

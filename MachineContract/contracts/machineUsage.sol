@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-contract machineussage{
+contract machineusage {
     mapping(string=>uint256) public usageStore;
 
     function recordUsage(string memory timeStamp,  uint256 usage)public {
