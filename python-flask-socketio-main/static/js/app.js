@@ -1,17 +1,25 @@
-$(document).ready(function () {
+/*
+while staring the server we must get the machine data from the machine contract to the startServer function
+*/
+function startServer(machineID, userWID) {
+
+  var financierWID = document.getElementById("financier_wallet_id").value;
+  var manufacturerWID = document.getElementById("manufacturer_wallet_id").value;
+
+  const MAX_DATA_COUNT = 100;
+  var socket = io.connect();
+  socket.on("updateSensorData", async function (msg) {
+    //console.log("Received sensorData :: " + msg.time_stamp + " :: " + msg.value+ " :: " + msg.volt_value+" :: " + msg.rotate_value+"::" + msg.vibration_value+"::" + msg.pressure_value);
+    if (myChart.data.labels.length > MAX_DATA_COUNT) {
+      removeFirstData();
+    }
+    addData(msg.time_stamp,msg.volt_value,msg.rotate_value,msg.vibration_value,msg.pressure_value);
+  });
+
+  /*
+  machine telemetry data chart 
+  */
   const ctx = document.getElementById("myChart").getContext("2d");
-
-  // const hourChart = new Chart(ctx, {
-  //   type: "line",
-  //   data: {
-  //     datasets: [{ label: "Usage",  }],
-  //   },
-  //   options: {
-  //     borderWidth: 3,
-  //     borderColor: ['rgba(255, 99, 132, 1)',],
-  //   },
-  // });
-
   const myChart = new Chart(ctx, {
     type: "line",
     data: {
@@ -34,28 +42,175 @@ $(document).ready(function () {
         }
       ],
     }
-    // options: {
-    //   borderWidth: 3,
-    //   borderColor: ['rgba(255, 99, 132, 1)',],
-    // },
   });
 
-  function addData(label, volt_data, rotate_data, vibration_data, pressure_data) {
-    //console.log("Adding data :: " + label +  " :: " + volt_data);
-    myChart.data.labels.push(label);
 
-    //for (var i = 0; i < myChart.data.datasets.length; i++) {
-      //myChart.data.datasets[0].data.push(data);
-      myChart.data.datasets[0].data.push(volt_data);
-      myChart.data.datasets[1].data.push(rotate_data);
-      myChart.data.datasets[2].data.push(vibration_data);
-      myChart.data.datasets[3].data.push(pressure_data);
-    //}
-    //console.log(myChart.data.datasets[0].data);
-    //console.log(myChart.data.datasets[1].data);
-    myChart.update();
+  const MAX_DAY_USAGE_COUNT = 31;
+  const duc = document.getElementById("dayUsageChart");
+  const dayUsageChart = new Chart(duc,{
+    type: "bar",
+    data: {
+      datasets: [
+        {
+          label: "Usage",
+          borderColor: ['rgba(25, 119, 12, 1)',],
+      }
+    ],
+    }
+  });
+
+  function addDayUsageData(label, usage) {
+    console.log("addDayUsageData "+label+"::"+usage)
+    var usage = usage/60;
+    if (dayUsageChart.data.labels.length > MAX_DAY_USAGE_COUNT) {
+      removeFirstDayUsageData();
+    }
+    dayUsageChart.data.labels.push(label);
+    dayUsageChart.data.datasets[0].data.push(usage);
+    dayUsageChart.update();
   }
 
+  function removeFirstDayUsageData() {
+    dayUsageChart.data.labels.splice(0, 1);
+    dayUsageChart.data.datasets.forEach((dataset) => {
+      dataset.data.shift();
+    });
+  }
+
+
+  
+
+
+  function addData(label, volt_data, rotate_data, vibration_data, pressure_data) {
+    myChart.data.labels.push(label);
+    myChart.data.datasets[0].data.push(volt_data);
+    myChart.data.datasets[1].data.push(rotate_data);
+    myChart.data.datasets[2].data.push(vibration_data);
+    myChart.data.datasets[3].data.push(pressure_data);
+    myChart.update();
+    /*
+    FORMULA FOR CALCULATING THE USAGE
+    Vibration metric
+    weight = 0.75
+    max = 80
+    formula = (value/max)*weight
+    COST PER HOUR = 10 tokens per hour
+    */
+    var usage = (vibration_data/80)*0.75*60;
+    console.log("usage"+usage);
+
+    usageContract(machineID,financierWID,usage,label);
+    console.log(label);
+    var hour = parseInt(label.slice(11,13));
+    if (hour === 10){
+      var day = label.slice(8,10);
+      var dayStamp = machineID+":"+label.slice(0,10);
+      getDayUsageData(day,dayStamp);
+      //console.log(dayUsage);
+      //addDayUsageData(day,dayUsage);
+    }
+  }
+
+  function getDayUsageData(day,dayStamp) {
+    console.log("getDayUsageData"+dayStamp);
+    var kld_from = "kld-from="+financierWID;
+    var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/0xa8b0124d967f9e18c16d8a5dfcff1bc10ef8cb1c/returnUsage?"+kld_from+"&kld-sync=true";
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({"timeStamp":dayStamp});
+    var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+    };
+
+    fetch(url, requestOptions)
+      .then(response => response.json())
+      .then(result => {
+        console.log(result);
+        //return parseInt(result.output);
+        var dayUsage = parseInt(result.output);
+        console.log(dayUsage);
+        addDayUsageData(day,dayUsage);
+        
+      })
+      .catch(error => console.log('error', error));
+  }
+
+  // function getMonthUsageData(monthStamp) {
+  //   console.log("getMonthUsageData"+monthStamp);
+  //   var kld_from = "kld-from="+financierWID;
+  //   var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/0xa8b0124d967f9e18c16d8a5dfcff1bc10ef8cb1c/returnUsage?"+kld_from+"&kld-sync=true";
+  //   var myHeaders = new Headers();
+  //   myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+  //   myHeaders.append("Content-Type", "application/json");
+  //   var raw = JSON.stringify({"timeStamp":monthStamp});
+  //   var requestOptions = {
+  //     method: 'POST',
+  //     headers: myHeaders,
+  //     body: raw,
+  //     redirect: 'follow'
+  //   };
+  //   fetch(url, requestOptions)
+  //     .then(response => response.json())
+  //     .then(result => {
+  //       console.log(result);
+  //       //return parseInt(result.output);
+  //       var dayUsage = parseInt(result.output);
+  //       console.log(dayUsage);
+  //       addDayUsageData(day,dayUsage);
+        
+  //     })
+  //     .catch(error => console.log('error', error));
+  
+  // }
+
+
+  function generateBill(){
+    //get the last transaction from
+    // https://api.kaleido.io/platform.html#tag/Ledger/paths/~1ledger~1%7Bconsortia_id%7D~1%7Benvironment_id%7D~1tokens~1contracts~1%7Baddress%7D~1transfers/get
+
+    //calculate the usage for the last transaction
+
+    
+  }
+
+  function usageContract(machineID,financierWID,usage,label) {
+    var daystamp = label.slice(0,10);
+    var monthStamp = label.slice(4,10);
+    var timeStamp = machineID+":"+label;
+    var dayStamp = machineID+":"+daystamp;
+    var monthStamp = machineID+":"+monthStamp;
+    console.log(dayStamp+" "+timeStamp+" "+usage);
+    var kld_from = "kld-from="+financierWID;
+
+    var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/0xa8b0124d967f9e18c16d8a5dfcff1bc10ef8cb1c/recordUsage?"+kld_from+"&kld-sync=true";
+
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+    myHeaders.append("Content-Type", "application/json");
+    var raw = JSON.stringify({
+      "dayStamp": dayStamp,
+      "monthStamp": monthStamp,
+      "timeStamp": timeStamp,
+      "usage": usage,
+    });
+    //console.log("raw "+raw);
+    
+    var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+    };
+    
+    fetch(url, requestOptions)
+      .then(response => response.text())
+      .catch(error => console.log('error', error));
+  }
 
   function removeFirstData() {
     myChart.data.labels.splice(0, 1);
@@ -64,92 +219,9 @@ $(document).ready(function () {
     });
   }
 
+}
 
 
-  const MAX_DATA_COUNT = 100;
-  //connect to the socket server.
-  //   var socket = io.connect("http://" + document.domain + ":" + location.port);
-  var socket = io.connect();
-
-  //receive details from server
-  socket.on("updateSensorData", async function (msg) {
-    //console.log("Received sensorData :: " + msg.date + " :: " + msg.value+ " :: " + msg.volt_value+" :: " + msg.rotate_value+"::" + msg.vibration_value+"::" + msg.pressure_value);
-
-    // Show only MAX_DATA_COUNT data
-    if (myChart.data.labels.length > MAX_DATA_COUNT) {
-      removeFirstData();
-    }
-    addData(msg.date,msg.volt_value,msg.rotate_value,msg.vibration_value,msg.pressure_value);
-    //await sleep(4000);
-    //sleep
-    
-  });
-});
-
-  var myPieChart = null/*  ww w.  j  a  v  a 2s  .c om*/
-        var config = {
-          options:{
-                responsive:true,
-                rotation: -90,
-                circumference: 180,
-          },
-          type:'pie'}
-      function pchart(ftb,mtb) {
-         var ftb = ftb,
-            mtb = mtb,
-            ctx = document.getElementById('pieChart').getContext('2d');
-                        config.data = {
-            labels: ["Financier","Manufacturer"],
-            datasets:
-               [{
-                  data: [ftb,mtb],
-                  backgroundColor: ["#cd3e51", "#1d76db"],
-                  //hoverBackgroundColor: ["#FF0000","#0000FF"]
-               }]
-         };
-         if(myPieChart == null){
-                            myPieChart = new Chart(ctx, config);
-                        }else{
-                            myPieChart.update()
-                        }
-      }
-
-// var flag = null;
-// function pieChartAppear(ftb,mtb) {
-//   console.log ("flag: ",flag)
-//   if (flag === null) {
-
-//   const ptx = document.getElementById("pieChart").getContext("2d");
-//   flag = true;
-//   const pieChart = new Chart(ptx, {
-//     type: "pie",
-//     data: {
-//       labels: ["Financier","Manifacturer"],
-//       datasets: [
-//         {
-//           label: "Usage",
-//           data: [ftb,mtb],
-//           backgroundColor: ["#3e95cd", "#8e5ea2"],
-//         },
-//       ],
-//     },
-//     options: {
-//       responsive:true,
-//       rotation: -90,
-//       circumference: 180,
-//       title: {
-//         display: true,
-//         text: "Pie Chart",
-//       },
-//     },
-//   });
-//   }
-//   else{
-//     console.log("pieChart update")
-//     pieChart.data.dataset.data=[ftb,mtb];
-//     pieChart.update();
-//   }
-// }
 
 function appear(){
   console.log("appear");
@@ -167,9 +239,7 @@ function appear(){
         data: [12, 10, 3, 5, 2, 3, 1, 2, 3, 4, 5, 6, 7, 10, 9, 1, 4, 12, 6, 8, 7, 2, 4, 3, 9, 2, 4, 6, 5, 4, 10],
         borderWidth: 1
       }]
-    },
-
-    
+    }, 
     options: {
       animation:{
         onComplete: () => {delayed = true
@@ -197,3 +267,32 @@ function appear(){
   });
 
 }
+
+
+//pie chart
+var myPieChart = null
+  var config = {
+    options:{
+          responsive:true,
+          rotation: -90,
+          circumference: 180,
+    },
+    type:'pie'}
+  function pchart(ftb,mtb) {
+      var ftb = ftb,
+        mtb = mtb,
+        ctx = document.getElementById('pieChart').getContext('2d');
+                    config.data = {
+        labels: ["Financier","Manufacturer"],
+        datasets:
+            [{
+              data: [ftb,mtb],
+              backgroundColor: ["#cd3e51", "#1d76db"],
+            }]
+      };
+      if(myPieChart == null){
+                        myPieChart = new Chart(ctx, config);
+                    }else{
+                        myPieChart.update()
+                    }
+  }
