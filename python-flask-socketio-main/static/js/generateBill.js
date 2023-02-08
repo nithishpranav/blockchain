@@ -14,6 +14,9 @@
     getLastTransaction() - This function is used to get the last transaction details of the machine.
     calculateBill() - This function is used to calculate the bill amount.
     getUsage() - This function is called by the calculate bill to fetch the usage details per date.
+
+    we assume the per hour usage is 10 tokens.
+    per_hour_usage = 10;
 */
 
   function generateBill(){
@@ -75,6 +78,7 @@
 
   }
   async function calculateBill(lastTransaction,machine_id,financier_wallet_id,manufacturer_wallet_id,machine_contract_address){
+    var per_hour_usage = 10;
     var today = new Date();
     var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
     today.setHours(0,0,0,0);
@@ -106,7 +110,10 @@
     }
 
     console.log("totalUsage"+totalUsage);
-    document.getElementById("machine_usage").innerHTML = totalUsage;
+
+    var bill = totalUsage*per_hour_usage;
+    document.getElementById("bill_usage").innerHTML = totalUsage;
+    document.getElementById("bill_cost").innerHTML = bill;
     document.getElementById("bill").style.display = "block";
   }
   async function getUsage(date,machine_id,financier_wallet_id){
@@ -142,4 +149,35 @@
       .catch(error => console.log('error', error));
       console.log("dayUsage"+dayUsage);
       return dayUsage;
-  } 
+  }
+  function payBill(){
+    var machine_id = document.getElementById("machine_id").value;
+    var amount = document.getElementById("bill_cost").innerHTML;
+    var recipient = document.getElementById("manufacturer_wallet_id").value;
+    var sender = document.getElementById("financier_wallet_id").value;
+
+    var kld_from = "kld-from="+sender;
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
+    myHeaders.append("Content-Type", "application/json");
+    var raw = JSON.stringify({
+      "amount": amount,
+      "recipient": recipient,
+      "sender": sender
+    });
+    var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+    };
+    fetch("https:// u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machine_id+"/transferFrom?"+kld_from, requestOptions)
+      .then(response => response.text())
+      .then(result => {
+        console.log(result);
+        loading();
+        setTimeout(() => getAddressBalance(), 6000);
+        
+      })
+      .catch(error => console.log('error', error));
+  }    

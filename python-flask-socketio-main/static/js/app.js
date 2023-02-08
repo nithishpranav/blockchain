@@ -1,11 +1,12 @@
 /*
 while staring the server we must get the machine data from the machine contract to the startServer function
+
+
 */
-function startServer(machineID, userWID) {
+function startServer(machineID, userWID,financierWalletID, manufacturerWalletID) {
 
-  var financierWID = document.getElementById("financier_wallet_id").value;
-  var manufacturerWID = document.getElementById("manufacturer_wallet_id").value;
-
+  var financierWID = financierWalletID
+  var manufacturerWID = manufacturerWalletID
   const MAX_DATA_COUNT = 100;
   var socket = io.connect();
   socket.on("updateSensorData", async function (msg) {
@@ -44,12 +45,12 @@ function startServer(machineID, userWID) {
     }
   });
 
-
   const MAX_DAY_USAGE_COUNT = 31;
   const duc = document.getElementById("dayUsageChart");
   const dayUsageChart = new Chart(duc,{
     type: "bar",
     data: {
+      //labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9', 'Day 10', 'Day 11', 'Day 12', 'Day 13', 'Day 14', 'Day 15', 'Day 16', 'Day 17', 'Day 18', 'Day 19', 'Day 20', 'Day 21', 'Day 22', 'Day 23', 'Day 24', 'Day 25', 'Day 26', 'Day 27', 'Day 28', 'Day 29', 'Day 30', 'Day 31'],
       datasets: [
         {
           label: "Usage",
@@ -135,37 +136,6 @@ function startServer(machineID, userWID) {
       })
       .catch(error => console.log('error', error));
   }
-
-  // function getMonthUsageData(monthStamp) {
-  //   console.log("getMonthUsageData"+monthStamp);
-  //   var kld_from = "kld-from="+financierWID;
-  //   var url = "https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/0xa8b0124d967f9e18c16d8a5dfcff1bc10ef8cb1c/returnUsage?"+kld_from+"&kld-sync=true";
-  //   var myHeaders = new Headers();
-  //   myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
-  //   myHeaders.append("Content-Type", "application/json");
-  //   var raw = JSON.stringify({"timeStamp":monthStamp});
-  //   var requestOptions = {
-  //     method: 'POST',
-  //     headers: myHeaders,
-  //     body: raw,
-  //     redirect: 'follow'
-  //   };
-  //   fetch(url, requestOptions)
-  //     .then(response => response.json())
-  //     .then(result => {
-  //       console.log(result);
-  //       //return parseInt(result.output);
-  //       var dayUsage = parseInt(result.output);
-  //       console.log(dayUsage);
-  //       addDayUsageData(day,dayUsage);
-        
-  //     })
-  //     .catch(error => console.log('error', error));
-  
-  // }
-
-
-
 
   function usageContract(machineID,financierWID,usage,label) {
     var daystamp = label.slice(0,10);

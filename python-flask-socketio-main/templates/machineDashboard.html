@@ -163,15 +163,15 @@
               <table>
               <tr>
                 <th>  Machine Usage</th>
-                <td id = machine_usage></td>
+                <td id = bill_usage></td>
               </tr>
               <tr>
                 <tH>Month Due</tH>
-                <td>200 Tokens</td>
+                <td id = bill_cost></td>
               </tr>
               </table>
               <br>
-              <button onclick="transfer()">Settle Amount</button>
+              <button onclick="payBill()">Settle Amount</button>
               <br><br><br>
             </center>
           </div>
@@ -207,11 +207,6 @@
       document.getElementById("bill").style.display = "none";
     }
 
-    // function appeargenerateBill(){
-    // console.log("appeargenerateBill");
-    //   document.getElementById("generateBill").style.display = "none";
-    // }
-
     function machineDetails(){
       var machineId;
       var userWID;
@@ -241,28 +236,25 @@
       fetch(url, requestOptions)
       .then(response => response.text())
       .then(result => {
-          console.log(result);
+          //console.log(result);
           var machineDetails = JSON.parse(result);
-          document.getElementById("machine_value").value = machineDetails.output1;
-          document.getElementById("financier_wallet_id").value = machineDetails.output2;
-          document.getElementById("manufacturer_wallet_id").value = machineDetails.output3;
-
+          console.log("result "+machineDetails);
+          document.getElementById("machine_value").innerHTML = machineDetails.output1;
+          document.getElementById("financier_wallet_id").innerHTML = machineDetails.output2;
+          document.getElementById("manufacturer_wallet_id").innerHTML = machineDetails.output3;
           document.getElementById("dashboard").style.display = "block";
-
-          getAddressBalance(machine_id, userWID);
+          getAddressBalance(machine_id, userWID, machineDetails.output2, machineDetails.output3);
       })
       .catch(error => console.log('error', error));
       
   
     }
 
-
-
-    function getAddressBalance(machine_id, userWID){
+    function getAddressBalance(machine_id, userWID, fwid, mwid){
       
       console.log("getAddressBalance");
-      var fwid = document.getElementById("financier_wallet_id").value;
-      var mwid = document.getElementById("manufacturer_wallet_id").value;
+      // var fwid = document.getElementById("financier_wallet_id").value;
+      // var mwid = document.getElementById("manufacturer_wallet_id").value;
       
       
 
@@ -290,38 +282,13 @@
           //pieChartUpdate(data[0].output,data[1].output);
           pchart(data[0].output,data[1].output);
         }, 1000);
-        //startServer(machine_id, userWID);
+        startServer(machine_id, userWID, fwid, mwid);
         
       }).catch(function(error) {
         console.log(error);
       });
     }
 
-    function transfer(){
-        var myHeaders = new Headers();
-        myHeaders.append("Authorization", "Basic dTBwNjgwb3pvMDpqN3dLUHRZa0xrNnBITlNDQTlDckJaNVM3MlBFemtCSGtxbjVSVkdESGRF");
-        myHeaders.append("Content-Type", "application/json");
-        var raw = JSON.stringify({
-          "amount": "200",
-          "recipient": "0x5c70e9865822bc0add6ef06464da0d977f724577",
-          "sender": "0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774"
-        });
-        var requestOptions = {
-          method: 'POST',
-          headers: myHeaders,
-          body: raw,
-          redirect: 'follow'
-        };
-        fetch("https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/0x2c7a04b836f98d819c28798b471936423498b100/transferFrom?kld-from=0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774", requestOptions)
-          .then(response => response.text())
-          .then(result => {
-            console.log(result);
-            loading();
-            setTimeout(() => getAddressBalance(), 6000);
-            
-          })
-          .catch(error => console.log('error', error));
-      }
 
     function loading(){
       console.log("loading");
