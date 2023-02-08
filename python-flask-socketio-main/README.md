@@ -21,3 +21,5 @@ pip install -r requirements.txt
 python sensor_app.py
 ```
 
+
+pip install requests

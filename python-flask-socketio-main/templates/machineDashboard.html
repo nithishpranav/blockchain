@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
     <script type="text/javascript" src="{{ url_for('static', filename = 'js/app.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename = 'js/generateBill.js') }}"></script>
     <link
       href="//mincss.com/entireframework.min.css"
       rel="stylesheet"
@@ -76,7 +77,7 @@
           2.2 Dashboard
             2.2.1 Chart Container
   -->
-  <body onload="noLoader(),noDashboard(),machineDetails()">
+  <body onload="noLoader(),noDashboard(),machineDetails(),noBill()">
     <div id = "l">
       <div id="loader"></div>
       <center>
@@ -162,7 +163,7 @@
               <table>
               <tr>
                 <th>  Machine Usage</th>
-                <td>200 Hours</td>
+                <td id = machine_usage></td>
               </tr>
               <tr>
                 <tH>Month Due</tH>
@@ -202,10 +203,14 @@
       document.getElementById("hChart").style.display = "block";
     }
    
-    function appeargenerateBill(){
-    console.log("appeargenerateBill");
-      document.getElementById("generateBill").style.display = "none";
+    function noBill(){
+      document.getElementById("bill").style.display = "none";
     }
+
+    // function appeargenerateBill(){
+    // console.log("appeargenerateBill");
+    //   document.getElementById("generateBill").style.display = "none";
+    // }
 
     function machineDetails(){
       var machineId;
@@ -251,11 +256,7 @@
   
     }
 
-    function generateBill(){
-      console.log("generateBill");
-      document.getElementById("bill").style.display = "block";
-      document.getElementById("generateBill").style.display = "none";
-    }
+
 
     function getAddressBalance(machine_id, userWID){
       
@@ -289,7 +290,7 @@
           //pieChartUpdate(data[0].output,data[1].output);
           pchart(data[0].output,data[1].output);
         }, 1000);
-        startServer(machine_id, userWID);
+        //startServer(machine_id, userWID);
         
       }).catch(function(error) {
         console.log(error);

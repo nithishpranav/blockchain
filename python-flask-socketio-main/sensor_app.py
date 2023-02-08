@@ -1,5 +1,6 @@
+import json
 from flask import Flask, render_template, redirect, request, session, jsonify
-
+import requests
 from flask_session import Session
 from flask_socketio import SocketIO
 from random import random
@@ -97,6 +98,21 @@ def getInfo():
             "userWID": session["userWID"]
         }
         return jsonify(info)
+
+@app.route('/getLastTransaction/<address>', methods=["POST", "GET"])
+def getLastTransaction(address):
+    machineContractAddress = address
+    print(machineContractAddress)
+    url = "https://console.kaleido.io/api/v1/ledger/u0sdbvxn14/u0anrngbym/addresses/"+machineContractAddress+"/transactions?limit=1"
+    payload={}
+    headers = {
+    'Authorization': 'Bearer u0bt01lis8-YaONAPbJ287Vj4FhH06clwCQRse+dPwwKrPhlpuWpkQ='
+    }
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    print(response.json)
+    return response.json()
 
 
 

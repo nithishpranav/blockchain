@@ -1,0 +1,67 @@
+[
+    {
+        "events": [
+            {
+                "eventSignature": "Approval(address,address,uint256)",
+                "owner": "0x0B6802cC861CC9CD1073b61856Eb4Cc7b2A9d774",
+                "spender": "0x0B6802cC861CC9CD1073b61856Eb4Cc7b2A9d774",
+                "value": "590"
+            },
+            {
+                "eventSignature": "Transfer(address,address,uint256)",
+                "from": "0x0B6802cC861CC9CD1073b61856Eb4Cc7b2A9d774",
+                "to": "0x5c70e9865822BC0aDd6Ef06464Da0D977f724577",
+                "value": "10"
+            }
+        ],
+        "isERC20": true,
+        "logs": [
+            {
+                "address": "0xA1FF08170E00ebC2086518548128213c3036f545",
+                "topics": [
+                    "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925",
+                    "0x0000000000000000000000000b6802cc861cc9cd1073b61856eb4cc7b2a9d774",
+                    "0x0000000000000000000000000b6802cc861cc9cd1073b61856eb4cc7b2a9d774"
+                ],
+                "data": "0x000000000000000000000000000000000000000000000000000000000000024e",
+                "blockNumber": 633334,
+                "transactionHash": "0xcddfff955073aa9dfdd7de375d43db5f49fbf2a1f232ac057f077d555448ae09",
+                "transactionIndex": 0,
+                "blockHash": "0x28b2dea37fb105d9716c203ef5ec668dba585c9bab992a263037465ca43106e7",
+                "logIndex": 0,
+                "removed": false,
+                "id": "log_f2d22835"
+            },
+            {
+                "address": "0xA1FF08170E00ebC2086518548128213c3036f545",
+                "topics": [
+                    "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                    "0x0000000000000000000000000b6802cc861cc9cd1073b61856eb4cc7b2a9d774",
+                    "0x0000000000000000000000005c70e9865822bc0add6ef06464da0d977f724577"
+                ],
+                "data": "0x000000000000000000000000000000000000000000000000000000000000000a",
+                "blockNumber": 633334,
+                "transactionHash": "0xcddfff955073aa9dfdd7de375d43db5f49fbf2a1f232ac057f077d555448ae09",
+                "transactionIndex": 0,
+                "blockHash": "0x28b2dea37fb105d9716c203ef5ec668dba585c9bab992a263037465ca43106e7",
+                "logIndex": 1,
+                "removed": false,
+                "id": "log_29307c62"
+            }
+        ],
+        "to": "0xa1ff08170e00ebc2086518548128213c3036f545",
+        "timestamp": "2023-02-06T09:56:59.000Z",
+        "from": "0x0b6802cc861cc9cd1073b61856eb4cc7b2a9d774",
+        "inputBytes": "0x23b872dd0000000000000000000000000b6802cc861cc9cd1073b61856eb4cc7b2a9d7740000000000000000000000005c70e9865822bc0add6ef06464da0d977f724577000000000000000000000000000000000000000000000000000000000000000a",
+        "gasProvided": 51782,
+        "blockChildren": 1,
+        "blockNumber": 633334,
+        "blockHash": "0x28b2dea37fb105d9716c203ef5ec668dba585c9bab992a263037465ca43106e7",
+        "private": false,
+        "status": "success",
+        "nextHash": null,
+        "previousHash": "0x3fb3ca91f1d279e226be7870b46dee685ab65a88dc2aeb9b02f936f6054f9039",
+        "index": 0,
+        "hash": "0xcddfff955073aa9dfdd7de375d43db5f49fbf2a1f232ac057f077d555448ae09"
+    }
+]

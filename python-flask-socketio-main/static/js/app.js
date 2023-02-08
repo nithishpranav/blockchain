@@ -77,10 +77,6 @@ function startServer(machineID, userWID) {
     });
   }
 
-
-  
-
-
   function addData(label, volt_data, rotate_data, vibration_data, pressure_data) {
     myChart.data.labels.push(label);
     myChart.data.datasets[0].data.push(volt_data);
@@ -169,14 +165,7 @@ function startServer(machineID, userWID) {
   // }
 
 
-  function generateBill(){
-    //get the last transaction from
-    // https://api.kaleido.io/platform.html#tag/Ledger/paths/~1ledger~1%7Bconsortia_id%7D~1%7Benvironment_id%7D~1tokens~1contracts~1%7Baddress%7D~1transfers/get
 
-    //calculate the usage for the last transaction
-
-    
-  }
 
   function usageContract(machineID,financierWID,usage,label) {
     var daystamp = label.slice(0,10);
@@ -220,6 +209,8 @@ function startServer(machineID, userWID) {
   }
 
 }
+
+
 
 
 
