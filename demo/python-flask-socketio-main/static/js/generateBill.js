@@ -19,6 +19,8 @@
     per_hour_usage = 10;
 */
 
+const { json } = require("body-parser");
+
   function generateBill(){
     console.log("machineDetails");
     fetch('/getInfo')
@@ -27,16 +29,17 @@
         console.log(data);
         machineId = data.machineID;
         userWID = data.userWID;
-        getContractDetails(machineId,userWID);
+        calculateBill(machineId,userWID);
       })
       .catch(error => console.log('error', error)); 
   }
-  function getContractDetails(machineId,userWID){
+  async function getContractDetails(machineId,userWID){
+    return new Promise(async (resolve, reject) => {
     var machine_id = machineId;
-    var machine_value;
-    var manufacturer_wallet_id;
-    var financier_wallet_id;
-    var machine_contract_address;
+    // var machine_value;
+    // var manufacturer_wallet_id;
+    // var financier_wallet_id;
+    // var machine_contract_address;
     var kld_from = "kld-from="+userWID;
     var url ="https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machine_id+"/contractDetails?"+kld_from;
     var myHeaders = new Headers();
@@ -46,21 +49,32 @@
         headers: myHeaders,
         redirect: 'follow'
     };
-    fetch(url, requestOptions)
+    const response  = await fetch(url, requestOptions)
       .then(response => response.text())
       .then(result => {
           console.log(result);
           var machineDetails = JSON.parse(result);
-          machine_value = machineDetails.output1;
-          financier_wallet_id = machineDetails.output2;
-          manufacturer_wallet_id = machineDetails.output3;
-          machine_contract_address = machineDetails.output4;
-          calculateBill(machineId,financier_wallet_id,manufacturer_wallet_id,machine_contract_address);        
+          resolve(machineDetails);
+          // machine_value = machineDetails.output1;
+          // financier_wallet_id = machineDetails.output2;
+          // manufacturer_wallet_id = machineDetails.output3;
+          // machine_contract_address = machineDetails.output4;
+          // calculateBill(machineId,financier_wallet_id,manufacturer_wallet_id,machine_contract_address);        
       })
       .catch(error => console.log('error', error));
+    });
+
   }
 
-  async function calculateBill(machine_id,financier_wallet_id,manufacturer_wallet_id,machine_contract_address){
+  async function calculateBill(machine_id,userWID){
+
+    const data = await getContractDetails(machine_id, userWID);
+    console.log(data);
+
+    var financier_wallet_id = data.output2;
+
+
+
     var from_date = document.getElementById("from_date").value;
     var to_date = document.getElementById("to_date").value;
     var per_hour_usage = 10;
@@ -147,11 +161,33 @@
       console.log("dayUsage"+dayUsage);
       return dayUsage;
   }
+
+
+
   function payBill(){
-    var machine_id = document.getElementById("machine_id").value;
-    var amount = document.getElementById("bill_cost").innerHTML;
-    var recipient = document.getElementById("manufacturer_wallet_id").value;
-    var sender = document.getElementById("financier_wallet_id").value;
+    var machine_id
+    console.log("machineDetails");
+    fetch('/getInfo')
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        machine_id = data.machineID;
+        userWID = data.userWID;
+        transferTokens(machine_id, userWID);
+      })
+      .catch(error => console.log('error', error)); 
+
+    }
+
+  async function transferTokens(machine_id, userWID){
+    //var machine_id = document.getElementById("machine_id").value;
+
+    const data = await getContractDetails(machine_id, userWID);
+
+    var amount = document.getElementById("bill_cost").innerHTML;//must be changed to backend
+    amount = Math.round(parseInt(amount));
+    var recipient = data.output3;
+    var sender = data.output2;
 
     var kld_from = "kld-from="+sender;
     var myHeaders = new Headers();
@@ -159,8 +195,8 @@
     myHeaders.append("Content-Type", "application/json");
     var raw = JSON.stringify({
       "amount": amount,
-      "recipient": recipient,
-      "sender": sender
+      "to": recipient,
+      "from": sender
     });
     var requestOptions = {
       method: 'POST',
@@ -168,7 +204,7 @@
       body: raw,
       redirect: 'follow'
     };
-    fetch("https:// u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machine_id+"/transferFrom?"+kld_from, requestOptions)
+    fetch("https://u0anrngbym-u0kuxslxro-connect.us0-aws.kaleido.io/instances/"+machine_id+"/transferFrom?"+kld_from+"&kld-sync=true" , requestOptions)
       .then(response => response.text())
       .then(result => {
         console.log(result);
